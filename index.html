@@ -61,9 +61,25 @@
       <a href="#participantes">Participantes</a>
       <a href="#guia">Guía</a>
     </nav>
+
+    <div id="authBar" class="auth-bar" aria-live="polite">
+      <button id="loginBtn" class="btn auth-btn primary" type="button">Ingresar con Google</button>
+    </div>
   </header>
 
-  <main>
+  <section id="accessPanel" class="access-panel" aria-live="polite">
+    <div>
+      <p class="eyebrow">Acceso Musicala</p>
+      <h2>Ingresa con Google para ver el repertorio</h2>
+      <p>
+        El evento, las canciones y las asignaciones estarán disponibles para estudiantes,
+        docentes y familias autenticadas.
+      </p>
+      <button id="accessLoginBtn" class="btn primary" type="button">Ingresar con Google</button>
+    </div>
+  </section>
+
+  <main id="appShell" hidden>
     <section id="inicio" class="hero section">
       <div class="hero-content">
         <p class="eyebrow">Segunda edición · 2026</p>
@@ -210,10 +226,14 @@
 
       <div class="filters" aria-label="Filtros de repertorio">
         <button class="filter-btn active" type="button" data-filter="todos">Todos</button>
-        <button class="filter-btn" type="button" data-filter="Adolescentes">Adolescentes</button>
-        <button class="filter-btn" type="button" data-filter="Adultos">Adultos</button>
-        <button class="filter-btn" type="button" data-filter="Mixto">Mixto</button>
-        <button class="filter-btn" type="button" data-filter="Tributo MJ">Tributo MJ</button>
+        <button class="filter-btn" type="button" data-filter="jovenes">Jóvenes</button>
+        <button class="filter-btn" type="button" data-filter="adultos">Adultos</button>
+        <button class="filter-btn" type="button" data-filter="mixta">Mixta</button>
+        <button class="filter-btn" type="button" data-filter="sin-configurar">Sin configurar</button>
+      </div>
+
+      <div id="editorTools" class="editor-tools" hidden>
+        <div id="editorAdmin"></div>
       </div>
 
       <div id="songsGrid" class="songs-grid" aria-live="polite"></div>
@@ -353,6 +373,6 @@
     </p>
   </footer>
 
-  <script src="./app.js" defer></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

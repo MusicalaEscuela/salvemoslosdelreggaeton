@@ -107,7 +107,8 @@ svg {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -259,6 +260,95 @@ a:focus-visible {
   color: var(--primary-dark);
   background: var(--primary-soft);
   transform: translateY(-1px);
+}
+
+.auth-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  min-width: max-content;
+}
+
+.auth-user {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.auth-user img {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.auth-user strong,
+.auth-user span {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-user strong {
+  line-height: 1.15;
+  font-size: 0.9rem;
+}
+
+.auth-user span {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.role-badge.editor {
+  color: #6d1b58;
+  background: #ffe4f3;
+}
+
+.role-badge.student {
+  color: #0f3b87;
+  background: #dbeafe;
+}
+
+.auth-btn {
+  min-height: 40px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.access-panel {
+  width: min(100% - 2rem, 760px);
+  margin: clamp(3rem, 8vw, 6rem) auto;
+  padding: clamp(1.4rem, 4vw, 2.2rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--white-glass);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.access-panel p {
+  color: var(--muted);
+}
+
+.access-panel[hidden],
+#appShell[hidden],
+.editor-tools[hidden] {
+  display: none !important;
 }
 
 /* ==========================================================================
@@ -723,6 +813,13 @@ h3 {
   margin-bottom: 0.4rem;
 }
 
+.song-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
 .song-card p {
   margin-bottom: 1rem;
   color: var(--muted);
@@ -755,6 +852,329 @@ h3 {
 .tag.blue {
   color: #0f3b87;
   background: #dbeafe;
+}
+
+.tag.soft {
+  color: var(--muted);
+  background: #f3eefb;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.38rem 0.62rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.status-badge.completa {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.status-badge.faltan,
+.status-badge.sin-configurar {
+  color: #7a3a00;
+  background: #fff3cf;
+}
+
+.status-badge.revisar {
+  color: #9f1239;
+  background: #ffe4e6;
+}
+
+.editor-tools {
+  margin: 1.2rem 0 1.4rem;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--white-glass);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.editor-tools-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.editor-tools h3,
+.editor-tools h4 {
+  margin-bottom: 0.7rem;
+}
+
+.editor-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.editor-summary div {
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.editor-summary strong,
+.editor-summary span {
+  display: block;
+}
+
+.editor-summary strong {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.editor-summary span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.admin-panel {
+  padding: 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.musician-form,
+.assignment-form,
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.8rem;
+}
+
+.musician-form label,
+.assignment-form label,
+.admin-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.musician-form input,
+.musician-form select,
+.assignment-form input,
+.assignment-form select,
+.admin-form input,
+.admin-form select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.65rem 0.75rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.form-wide {
+  grid-column: span 2;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.55rem;
+  grid-column: 1 / -1;
+}
+
+.instrumentation-panel,
+.assignments-panel {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.assignments-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+}
+
+.assignments-heading h4 {
+  margin: 0;
+}
+
+.assignments-heading span,
+.empty-state {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.assignments-list {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.instrumentation-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.assignment-item,
+.instrument-row,
+.load-row,
+.musician-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.assignment-item strong,
+.assignment-item span,
+.assignment-item small,
+.instrument-row strong,
+.instrument-row span,
+.instrument-row small,
+.load-row strong,
+.load-row span,
+.load-row p,
+.musician-row strong,
+.musician-row span {
+  display: block;
+}
+
+.assignment-item span,
+.assignment-item small,
+.instrument-row span,
+.instrument-row small,
+.load-row span,
+.load-row p,
+.musician-row span {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.instrument-row.is-complete {
+  border-color: rgba(34, 197, 94, 0.28);
+  background: #f0fdf4;
+}
+
+.instrument-row.is-missing {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: #fffaf0;
+}
+
+.instrument-row.is-over {
+  border-color: rgba(244, 63, 94, 0.28);
+  background: #fff1f2;
+}
+
+.assignment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.mini-action,
+.song-editor-actions button {
+  min-height: 32px;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  font-size: 0.78rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.song-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+
+.song-editor-actions button:last-child {
+  color: #9f1239;
+  background: #ffe4e6;
+}
+
+.assignment-actions button {
+  min-height: 32px;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+  font-size: 0.78rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.assignment-actions button:last-child {
+  color: #9f1239;
+  background: #ffe4e6;
+}
+
+.assignment-warnings,
+.app-status {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.7rem 0;
+}
+
+.assignment-warnings span,
+.app-status {
+  padding: 0.65rem 0.75rem;
+  border-radius: 14px;
+  color: #7a3a00;
+  background: #fff3cf;
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.app-status {
+  margin-bottom: 1rem;
+  border: 1px solid rgba(251, 191, 36, 0.32);
+}
+
+.app-status.success {
+  color: #14532d;
+  background: #dcfce7;
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.load-summary {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1.1rem;
+}
+
+.load-summary h4 {
+  margin-top: 0.7rem;
+}
+
+.load-row.is-heavy {
+  border-color: rgba(236, 72, 153, 0.28);
+  background: #fff0f8;
 }
 
 /* ==========================================================================
@@ -926,6 +1346,12 @@ h3 {
     justify-content: flex-start;
     padding-bottom: 0.1rem;
   }
+
+  .auth-bar {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 920px) {
@@ -945,6 +1371,14 @@ h3 {
 
   .cards-grid,
   .songs-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .musician-form,
+  .assignment-form,
+  .admin-form,
+  .admin-grid,
+  .editor-summary {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -1061,6 +1495,34 @@ h3 {
   .tab-btn {
     width: 100%;
     padding-inline: 0.7rem;
+  }
+
+  .musician-form,
+  .assignment-form,
+  .admin-form,
+  .admin-grid,
+  .editor-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .form-wide {
+    grid-column: auto;
+  }
+
+  .assignment-item,
+  .instrument-row,
+  .load-row,
+  .musician-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .assignment-actions {
+    justify-content: flex-start;
+  }
+
+  .song-title-row {
+    flex-direction: column;
   }
 }
 
