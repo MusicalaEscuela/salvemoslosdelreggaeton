@@ -38,6 +38,21 @@ const AGE_LABELS = {
 const ROLE_OPTIONS = ["principal", "apoyo", "coro", "suplente"];
 const MUSICIAN_TYPES = ["estudiante", "docente", "invitado"];
 
+const songScores = {
+  pyt: [
+    {
+      label: "Bajo",
+      url: "https://drive.google.com/file/d/1vAVLhPR_gJ6XObIQ7IzdYv9oN6fXKlS2/view"
+    }
+  ],
+  "p-y-t-pretty-young-thing": [
+    {
+      label: "Bajo",
+      url: "https://drive.google.com/file/d/1vAVLhPR_gJ6XObIQ7IzdYv9oN6fXKlS2/view"
+    }
+  ]
+};
+
 const fallbackSongs = [
   ["Take Me Out", "Franz Ferdinand", "Rock alternativo"],
   ["Boys Don't Cry", "The Cure", "New wave"],
@@ -172,6 +187,29 @@ function getSongNotes(song) {
 
 function getSongAge(song) {
   return toAgeValue(song.ageCategory || song.group);
+}
+
+function getSongScores(song) {
+  const keys = [...new Set([song.id, makeSongId(song.title)].filter(Boolean))];
+  const storedScores = Array.isArray(song.scores)
+    ? song.scores
+    : Array.isArray(song.sheetMusic)
+      ? song.sheetMusic
+      : [];
+  const fallbackScores = keys.flatMap((key) => songScores[key] || []);
+  const scores = [...storedScores, ...fallbackScores]
+    .map((score) => ({
+      label: String(score.label || score.instrument || "Partitura").trim(),
+      url: String(score.url || score.link || "").trim()
+    }))
+    .filter((score) => score.url);
+  const seen = new Set();
+  return scores.filter((score) => {
+    const key = `${normalizeText(score.label)}|${score.url}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function getBandById(bandId) {
@@ -345,6 +383,7 @@ function renderSongCard(song) {
   const instrumentation = calculateInstrumentation(song.id);
   const age = getSongAge(song);
   const notes = getSongNotes(song);
+  const scores = getSongScores(song);
 
   return `
     <article class="song-card" data-song-id="${escapeHTML(song.id)}">
@@ -362,6 +401,8 @@ function renderSongCard(song) {
         <span class="tag">${escapeHTML(song.category || "Sin categoria musical")}</span>
         ${song.source === "fallback" ? `<span class="tag soft">Fallback visual</span>` : ""}
       </div>
+
+      ${renderScoreLinks(scores)}
 
       <section class="instrumentation-panel">
         <div class="assignments-heading">
@@ -384,6 +425,7 @@ function renderSongCard(song) {
       ${
         state.canEdit
           ? `
+            ${renderScoreManager(song, scores)}
             <div class="song-editor-actions">
               <button class="edit-song-btn" type="button" data-song-id="${escapeHTML(song.id)}">Editar cancion</button>
               <button class="delete-song-btn" type="button" data-song-id="${escapeHTML(song.id)}">Desactivar cancion</button>
@@ -392,6 +434,61 @@ function renderSongCard(song) {
           : ""
       }
     </article>
+  `;
+}
+
+function renderScoreManager(song, scores) {
+  if (song.source === "fallback") return "";
+
+  return `
+    <section class="score-manager">
+      <div class="assignments-heading">
+        <h4>Partituras</h4>
+        <span>${scores.length ? `${scores.length} link${scores.length === 1 ? "" : "s"}` : "Pendientes"}</span>
+      </div>
+      <form class="score-form" data-song-id="${escapeHTML(song.id)}">
+        <label>Instrumento<input name="label" type="text" placeholder="Bajo" required /></label>
+        <label>Link<input name="url" type="url" placeholder="https://drive.google.com/..." required /></label>
+        <button class="mini-action" type="submit">Agregar</button>
+      </form>
+      ${
+        scores.length
+          ? `
+            <div class="score-admin-list">
+              ${scores
+                .map(
+                  (score, index) => `
+                    <div>
+                      <a href="${escapeHTML(score.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(score.label)}</a>
+                      <button class="remove-score-btn" type="button" data-song-id="${escapeHTML(song.id)}" data-score-index="${index}">Quitar</button>
+                    </div>
+                  `
+                )
+                .join("")}
+            </div>
+          `
+          : `<p class="empty-state score-empty">Agrega los links de Drive a medida que esten listos.</p>`
+      }
+    </section>
+  `;
+}
+
+function renderScoreLinks(scores) {
+  if (!scores.length) return "";
+
+  return `
+    <div class="score-links" aria-label="Partituras disponibles">
+      <span>Partituras</span>
+      ${scores
+        .map(
+          (score) => `
+            <a href="${escapeHTML(score.url)}" target="_blank" rel="noopener noreferrer">
+              ${escapeHTML(score.label)}
+            </a>
+          `
+        )
+        .join("")}
+    </div>
   `;
 }
 
@@ -1000,10 +1097,11 @@ async function submitMusician(form) {
 
 function setupSongActions() {
   els.songsGrid?.addEventListener("submit", async (event) => {
-    const form = event.target.closest(".assignment-form");
+    const form = event.target.closest(".assignment-form, .score-form");
     if (!form || !state.canEdit) return;
     event.preventDefault();
-    await submitAssignment(form);
+    if (form.classList.contains("assignment-form")) await submitAssignment(form);
+    if (form.classList.contains("score-form")) await submitScore(form);
   });
 
   els.songsGrid?.addEventListener("click", async (event) => {
@@ -1019,7 +1117,73 @@ function setupSongActions() {
     if (button.classList.contains("delete-requirement-btn")) await removeRequirement(songId, button.dataset.requirementId);
     if (button.classList.contains("edit-assignment-btn")) showAssignmentEditor(songId, button.dataset.assignmentId);
     if (button.classList.contains("delete-assignment-btn")) await removeAssignment(songId, button.dataset.assignmentId);
+    if (button.classList.contains("remove-score-btn")) await removeScore(songId, button.dataset.scoreIndex);
   });
+}
+
+async function submitScore(form) {
+  const songId = form.dataset.songId;
+  const song = state.songs.find((item) => item.id === songId);
+  const data = Object.fromEntries(new FormData(form));
+  const label = String(data.label || "").trim();
+  const url = String(data.url || "").trim();
+  if (!song || song.source === "fallback") {
+    setStatus("Crea la cancion en Firestore antes de agregar partituras.", "warning");
+    return;
+  }
+  if (!label || !url) {
+    setStatus("Agrega instrumento y link de la partitura.", "warning");
+    return;
+  }
+  const existingScores = getStoredSongScores(song);
+  try {
+    await updateSong(songId, {
+      scores: [...existingScores, { label, url }]
+    });
+    form.reset();
+    setStatus("Partitura agregada.", "success");
+  } catch (error) {
+    console.error("No se pudo agregar la partitura.", error);
+    setStatus("No se pudo agregar la partitura.", "warning");
+  }
+}
+
+async function removeScore(songId, scoreIndex) {
+  const song = state.songs.find((item) => item.id === songId);
+  const index = Number(scoreIndex);
+  if (!song || !Number.isInteger(index)) return;
+  const scores = getSongScores(song);
+  const scoreToRemove = scores[index];
+  if (!scoreToRemove) return;
+  const storedScores = getStoredSongScores(song);
+  const nextScores = storedScores.filter(
+    (score) => !(String(score.url || score.link || "").trim() === scoreToRemove.url && normalizeText(score.label || score.instrument) === normalizeText(scoreToRemove.label))
+  );
+  if (nextScores.length === storedScores.length) {
+    setStatus("Ese link es de respaldo en codigo. Agrega el nuevo en el editor y luego se puede retirar del respaldo.", "warning");
+    return;
+  }
+  try {
+    await updateSong(songId, { scores: nextScores });
+    setStatus("Partitura quitada.", "success");
+  } catch (error) {
+    console.error("No se pudo quitar la partitura.", error);
+    setStatus("No se pudo quitar la partitura.", "warning");
+  }
+}
+
+function getStoredSongScores(song) {
+  const scores = Array.isArray(song.scores)
+    ? song.scores
+    : Array.isArray(song.sheetMusic)
+      ? song.sheetMusic
+      : [];
+  return scores
+    .map((score) => ({
+      label: String(score.label || score.instrument || "Partitura").trim(),
+      url: String(score.url || score.link || "").trim()
+    }))
+    .filter((score) => score.url);
 }
 
 async function submitAssignment(form) {

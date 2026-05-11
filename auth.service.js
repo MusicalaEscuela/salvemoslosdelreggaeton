@@ -3,9 +3,6 @@ import { auth, db, onAuthStateChanged, provider, signInWithPopup, signOut } from
 
 const INITIAL_EDITORS = new Set([
   "alekcaballeromusic@gmail.com",
-  "emilybg0102@gmail.com",
-  "musicalaasesor@gmail.com",
-  "imusicaladocente@gmail.com",
   "catalina.medina.leal@gmail.com"
 ]);
 
