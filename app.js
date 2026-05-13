@@ -38,6 +38,17 @@ const AGE_LABELS = {
 const ROLE_OPTIONS = ["principal", "apoyo", "coro", "suplente"];
 const MUSICIAN_TYPES = ["estudiante", "docente", "invitado"];
 
+const VOICE_INSTRUMENT_KEYWORDS = [
+  "voz",
+  "voces",
+  "canto",
+  "cantante",
+  "vocal",
+  "vocales",
+  "coro",
+  "coros"
+];
+
 const songScores = {
   pyt: [
     {
@@ -181,6 +192,52 @@ function normalizeInstrument(value) {
   return normalizeText(value);
 }
 
+function isVoiceInstrument(value) {
+  const key = normalizeInstrument(value);
+  if (!key) return false;
+  return VOICE_INSTRUMENT_KEYWORDS.some((keyword) => key === keyword || key.includes(keyword));
+}
+
+function getInvalidRepeatedMusicians(assignments) {
+  const byMusician = new Map();
+
+  assignments.forEach((assignment) => {
+    const musicianKey = assignment.musicianId || normalizeText(assignment.musicianName);
+    if (!musicianKey) return;
+    const current = byMusician.get(musicianKey) || {
+      musicianKey,
+      musicianName: assignment.musicianName || "Musico",
+      instruments: new Map(),
+      vocal: [],
+      nonVocal: []
+    };
+    const instrumentKey = normalizeInstrument(assignment.instrument);
+    const bucket = current.instruments.get(instrumentKey) || [];
+    bucket.push(assignment);
+    current.instruments.set(instrumentKey, bucket);
+
+    if (isVoiceInstrument(assignment.instrument)) current.vocal.push(assignment);
+    else current.nonVocal.push(assignment);
+
+    byMusician.set(musicianKey, current);
+  });
+
+  const invalid = new Set();
+
+  byMusician.forEach((entry) => {
+    const repeatsSameInstrument = [...entry.instruments.values()].some((items) => items.length > 1);
+    const tooManyVocalParts = entry.vocal.length > 1;
+    const tooManyInstrumentalParts = entry.nonVocal.length > 1;
+    const tooManyTotalParts = entry.vocal.length + entry.nonVocal.length > 2;
+
+    if (repeatsSameInstrument || tooManyVocalParts || tooManyInstrumentalParts || tooManyTotalParts) {
+      invalid.add(entry.musicianKey);
+    }
+  });
+
+  return invalid;
+}
+
 function getSongNotes(song) {
   return song.notes ?? song.note ?? "";
 }
@@ -258,8 +315,7 @@ function withSongCompatibility(song) {
 function calculateInstrumentation(songId) {
   const requirements = getRequirements(songId);
   const assignments = getAssignments(songId);
-  const repeatedMusicians = new Set();
-  const seenMusicians = new Set();
+  const repeatedMusicians = getInvalidRepeatedMusicians(assignments);
   const rows = requirements.map((requirement) => {
     const instrumentKey = normalizeInstrument(requirement.instrument);
     const assigned = assignments.filter((assignment) => normalizeInstrument(assignment.instrument) === instrumentKey).length;
@@ -275,13 +331,6 @@ function calculateInstrumentation(songId) {
       complete: assigned >= required && assigned <= max,
       over: max > 0 && assigned > max
     };
-  });
-
-  assignments.forEach((assignment) => {
-    const key = assignment.musicianId || normalizeText(assignment.musicianName);
-    if (!key) return;
-    if (seenMusicians.has(key)) repeatedMusicians.add(key);
-    seenMusicians.add(key);
   });
 
   const hasRequirements = rows.length > 0;
@@ -624,7 +673,7 @@ function getSuggestedMusicians(instrument) {
 
 function renderAssignmentWarnings(songId, instrumentation) {
   const warnings = [];
-  if (instrumentation.repeatedMusicians.size) warnings.push("Hay un musico repetido en esta cancion.");
+  if (instrumentation.repeatedMusicians.size) warnings.push("Hay un musico repetido con una combinacion no permitida en esta cancion.");
   instrumentation.rows.forEach((row) => {
     if (row.over) warnings.push(`${row.label || row.instrument}: hay mas musicos que cupos maximos.`);
   });
@@ -1227,8 +1276,27 @@ async function submitAssignment(form) {
 
 function validateAssignment(songId, musicianId, instrument, assignmentId = "") {
   const assignments = getAssignments(songId).filter((assignment) => assignment.id !== assignmentId);
-  if (assignments.some((assignment) => assignment.musicianId === musicianId)) {
-    return { blocked: true, message: "Ese musico ya esta asignado en esta cancion." };
+  const sameMusicianAssignments = assignments.filter((assignment) => assignment.musicianId === musicianId);
+  const instrumentKey = normalizeInstrument(instrument);
+  const isVocalAssignment = isVoiceInstrument(instrument);
+
+  if (sameMusicianAssignments.some((assignment) => normalizeInstrument(assignment.instrument) === instrumentKey)) {
+    return { blocked: true, message: "Ese musico ya esta asignado con ese mismo instrumento en esta cancion." };
+  }
+
+  const alreadyHasVocalPart = sameMusicianAssignments.some((assignment) => isVoiceInstrument(assignment.instrument));
+  const alreadyHasInstrumentalPart = sameMusicianAssignments.some((assignment) => !isVoiceInstrument(assignment.instrument));
+
+  if (isVocalAssignment && alreadyHasVocalPart) {
+    return { blocked: true, message: "Ese musico ya tiene una parte de voz en esta cancion." };
+  }
+
+  if (!isVocalAssignment && alreadyHasInstrumentalPart) {
+    return { blocked: true, message: "Ese musico ya tiene un instrumento asignado en esta cancion. Solo se permite repetirlo si la otra asignacion es voz." };
+  }
+
+  if (sameMusicianAssignments.length >= 2) {
+    return { blocked: true, message: "Ese musico ya tiene instrumento y voz en esta cancion." };
   }
 
   const requirement = getRequirements(songId).find((item) => normalizeInstrument(item.instrument) === normalizeInstrument(instrument));
